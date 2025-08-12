@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shield33 Terminal Animation</title>
+  <style>
+    :root{
+      --fg:#e7fff5;
+      --neon:#2BDE9D;
+      --dim:#2e3a34;
+      --accent:#1bbf82;
+      --font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--fg);
+      font-family:var(--font);
+    }
+    .transparent{ background: transparent !important; }
+    .hero{
+      min-height:200px;
+      display:grid;
+      place-items:center;
+      padding: clamp(16px, 3vw, 48px);
+    }
+    .terminal{
+      width:min(100%,100%);
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04);
+      background:#001029;
+    }
+    .term-topbar{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 14px;
+      background:linear-gradient(180deg,#00173D,#001029);
+      border-bottom:1px solid #00173D;
+      color:#8ea397;
+      font:12px/1 var(--font);
+    }
+    .traffic{display:flex;gap:8px;margin-right:8px}
+    .dot{width:10px;height:10px;border-radius:50%;background:#38443e;box-shadow:0 0 0 1px rgba(255,255,255,.05) inset}
+    .dot.red{background:#ff5f56}.dot.yellow{background:#ffbd2e}.dot.green{background:#27c93f}
+    .title{opacity:.8}
+    .screen{
+      position: relative;
+      background: repeating-linear-gradient(180deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 3px),
+                  linear-gradient(180deg, rgba(43,222,157,.05), transparent 30%);
+      color: var(--fg);
+      font: 14px/1.55 var(--font);
+      padding: 20px;
+      height: min(540px, 60vh);
+      overflow: auto;
+      scroll-behavior: smooth;
+    }
+    .line{white-space: pre-wrap; word-break: break-word;}
+    .prompt{color: var(--neon)}
+    .muted{opacity:.7}
+    .success{color: var(--neon)}
+    .warn{color:#ffd166}
+    .error{color:#ff6b6b}
+    .dim{color:#7f8a84}
+    .caret{display:inline-block; width:9px; background:var(--neon); margin-left:3px; animation: blink 1s steps(1,end) infinite}
+    @keyframes blink{50%{opacity:0}}
+    .glow{ text-shadow: 0 0 6px rgba(43,222,157,.5), 0 0 18px rgba(43,222,157,.18); }
+    @media (prefers-reduced-motion: reduce){ .caret{animation:none} }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="terminal" role="region" aria-label="Shield33 scanning terminal">
+      <div class="term-topbar">
+        <div class="traffic" aria-hidden="true"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span></div>
+        <div class="title" id="title">/usr/local/bin/shield33 — anonymous consulting firm</div>
+      </div>
+      <div class="screen" id="screen" aria-live="polite" aria-atomic="false"></div>
+    </div>
+  </section>
+
+  <script>
+    (function(){
+      var params = new URLSearchParams(location.search);
+      var COMPANY = params.get('company') || 'Anonymous Consulting Firm';
+      var NEON    = params.get('neon')    || '#2BDE9D';
+      var PAUSE   = params.get('pause')   !== 'false';
+      var TRANSPARENT = params.get('transparent') === 'true';
+
+      document.documentElement.style.setProperty('--neon', NEON);
+      if (TRANSPARENT) document.body.classList.add('transparent');
+      document.getElementById('title').textContent = '/usr/local/bin/shield33 — ' + COMPANY;
+
+      var screenEl = document.getElementById('screen');
+      function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+      function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+      function writeLine(text, cls){
+        var line = document.createElement('div');
+        line.className = 'line' + (cls ? ' ' + cls : '');
+        if (text) line.textContent = text;
+        screenEl.appendChild(line);
+        screenEl.scrollTop = screenEl.scrollHeight;
+        return line;
+      }
+      async function typeLine(prefix, text, cls){
+        var line = writeLine('', cls || '');
+        var prompt = document.createElement('span');
+        prompt.className = 'prompt glow';
+        prompt.textContent = prefix;
+        line.appendChild(prompt);
+        line.appendChild(document.createTextNode(' '));
+        var body = document.createElement('span');
+        line.appendChild(body);
+        var caret = document.createElement('span');
+        caret.className = 'caret';
+        line.appendChild(caret);
+        for (var i=0;i<text.length;i++){
+          if (PAUSE && !active){ await sleep(120); i--; continue; }
+          body.textContent += text.charAt(i);
+          if (i % 3 === 0) screenEl.scrollTop = screenEl.scrollHeight;
+          await sleep(rand(8,22));
+        }
+        caret.remove();
+        screenEl.scrollTop = screenEl.scrollHeight;
+        return line;
+      }
+      function fmt(n){ return n.toLocaleString('en-US'); }
+
+      var steps = [
+        { t: 'whoami', c: 'muted' },
+        { t: 'shield33 — reconnaissance module v1.0.0' },
+        { t: 'target set: ' + COMPANY },
+        { t: 'timestamp: ' + new Date().toISOString(), c: 'dim' },
+        // 1) Subdomain scan
+        { t: 'Starting scan for company web addresses...' },
+        { t: 'Searching for subdomains of ' + COMPANY + '...' },
+        { t: fmt(967) + ' subdomains found.', c: 'success' },
+        { t: 'Checking each subdomain for public content...' },
+        { t: 'Subdomain scan complete. Key findings stored for analysis.', c: 'success' },
+        // 2) Public file scan
+        { t: 'Looking for public files indexed by search engines...' },
+        { t: 'Identified 245 PDF, Word, and Excel files.' },
+        { t: 'Scanning files for client names, project details, and contact info...' },
+        { t: 'File scan complete — sensitive information detected.', c: 'warn' },
+        // 3) Code repositories
+        { t: 'Searching for public code repositories linked to ' + COMPANY + '...' },
+        { t: '18 repositories found on GitHub, GitLab, and Bitbucket.' },
+        { t: 'Scanning code for API keys, tokens, and internal project names...' },
+        { t: 'Repository scan complete — exposures flagged.', c: 'warn' },
+        // 4) Employee-generated content
+        { t: 'Reviewing employee-generated content on LinkedIn, Glassdoor, and forums...' },
+        { t: 'Extracting potential leaks from public posts, job ads, and discussions...' },
+        { t: 'Found 12 mentions of confidential projects and 5 client names.', c: 'warn' },
+        // Wrap-up
+        { t: 'Aggregating findings and assigning risk levels...' },
+        { t: 'Generating report for ' + COMPANY + '...', c: 'success' },
+        { t: 'Scan complete — public footprint indexed.', c: 'success' },
+        { t: 'watch: monitoring for new exposures (interval: 5m)', c: 'dim' }
+      ];
+
+      var active = true;
+      if (PAUSE){
+        try{
+          var hero = document.querySelector('.hero');
+          if (hero && 'IntersectionObserver' in window){
+            var io = new IntersectionObserver(function(e){ active = e[0].isIntersecting; }, {threshold:0});
+            io.observe(hero);
+          }
+        }catch(_){ }
+      }
+
+      async function play(){
+        writeLine('$', 'prompt');
+        await sleep(500);
+        for (var i=0;i<steps.length;i++){
+          var s = steps[i];
+          await typeLine('#', s.t, s.c || '');
+          await sleep(i < steps.length-1 ? rand(220, 720) : 1200);
+        }
+        for(;;){
+          if (PAUSE && !active){ await sleep(500); continue; }
+          await typeLine('#', 'watch: no new exposures detected', 'dim');
+          await sleep(3500);
+          screenEl.scrollTop = screenEl.scrollHeight;
+        }
+      }
+
+      if (document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', play, {once:true});
+      } else {
+        play();
+      }
+    })();
+  </script>
+</body>
+</html>
