@@ -11,6 +11,7 @@
       --dim:#2e3a34;
       --accent:#1bbf82;
       --font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --scroll:#3E50F7;
     }
     html,body{height:100%}
     body{
@@ -50,6 +51,28 @@
       height: min(540px, 60vh);
       overflow: auto;
       scroll-behavior: smooth;
+    }
+    .screen::-webkit-scrollbar{
+      width: 12px;
+    }
+    .screen::-webkit-scrollbar-track{
+      background: transparent;
+    }
+    .screen::-webkit-scrollbar-thumb{
+      background-color: var(--scroll);
+      border-radius: 8px;
+      /* this creates a gap so the track still looks hidden */
+      border: 3px solid transparent;
+      background-clip: content-box;
+    }
+    .screen::-webkit-scrollbar-button{
+      background-color: var(--scroll);
+      display: block;         /* ensure buttons render when available */
+      height: 12px;           /* tweak to taste */
+    }
+    .screen::-webkit-scrollbar-thumb:hover,
+    .screen::-webkit-scrollbar-button:hover{
+      background-color: var(--scroll);
     }
     .line{white-space: pre-wrap; word-break: break-word;}
     .prompt{color: var(--neon)}
